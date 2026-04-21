@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "939157132941",
+    "project_id": "certifications-f0481",
+    "storage_bucket": "certifications-f0481.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:939157132941:android:4184e26d58b1ec7cf534c4",
+        "android_client_info": {
+          "package_name": "com.example.agartu"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDRvgfUWnIL8yJVG0gyNGIal3YSjXdXbss"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
