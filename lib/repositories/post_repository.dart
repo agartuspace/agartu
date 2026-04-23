@@ -17,14 +17,16 @@ class PostRepository {
         .map((snap) => snap.docs.map(PostModel.fromFirestore).toList());
   }
 
-  // stream posts by user
   Stream<List<PostModel>> watchUserPosts(String userId) {
     return _db
         .collection(_collection)
         .where('userId', isEqualTo: userId)
-        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snap) => snap.docs.map(PostModel.fromFirestore).toList());
+        .map((snap) {
+      final posts = snap.docs.map(PostModel.fromFirestore).toList();
+      posts.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return posts;
+    });
   }
 
   // create post
@@ -33,14 +35,23 @@ class PostRepository {
     required String username,
     required String content,
   }) async {
-    await _db.collection(_collection).add({
-      'userId': userId,
-      'username': username,
-      'content': content.trim(),
-      'createdAt': FieldValue.serverTimestamp(),
-      'likesCount': 0,
-      'likedBy': <String>[],
-    });
+    try {
+      await _db.collection(_collection).add({
+        'userId': userId,
+        'username': username,
+        'content': content.trim(),
+        'createdAt': FieldValue.serverTimestamp(),
+        'likesCount': 0,
+        'likedBy': <String>[],
+      }).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () => throw Exception(
+          'Failed to sync with Firebase server. Ensure Firestore Database is created in the console and security rules allow writes.',
+        ),
+      );
+    } catch (e) {
+      throw Exception('Create post failed: $e');
+    }
   }
 
   // toggle like

@@ -279,6 +279,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
               if (state is PostLoading) {
                 return const AppLoader(size: 28);
               }
+              if (state is PostError) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  child: Center(
+                    child: Text(
+                      'Failed to load posts: ${state.message}',
+                      style: const TextStyle(color: AppColors.likeFill),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                );
+              }
               if (state is PostLoaded) {
                 if (state.posts.isEmpty) {
                   return Padding(

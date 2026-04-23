@@ -26,11 +26,17 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
 
-  final _screens = const [
-    FeedScreen(),
-    CreatePostScreen(),
-    ExploreScreen(),
-    ProfileScreen(),
+  late final _screens = [
+    const FeedScreen(),
+    CreatePostScreen(
+      onPostCreated: () {
+        setState(() {
+          _currentIndex = 0;
+        });
+      },
+    ),
+    const ExploreScreen(),
+    const ProfileScreen(),
   ];
 
   @override

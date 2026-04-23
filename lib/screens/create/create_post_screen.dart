@@ -7,10 +7,13 @@ import '../../constants/app_colors.dart';
 import '../../constants/locale_keys.dart';
 import '../../cubits/post/post_cubit.dart';
 import '../../cubits/post/post_state.dart';
+import '../../services/local_storage_service.dart';
 import '../../widgets/app_loader.dart';
 
 class CreatePostScreen extends StatefulWidget {
-  const CreatePostScreen({super.key});
+  final VoidCallback? onPostCreated;
+
+  const CreatePostScreen({super.key, this.onPostCreated});
 
   @override
   State<CreatePostScreen> createState() => _CreatePostScreenState();
@@ -20,6 +23,10 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   final _formKey = GlobalKey<FormState>();
   final _contentController = TextEditingController();
   final _contentFocus = FocusNode();
+  
+  bool _isCreatingLocally = false;
+
+
 
   @override
   void initState() {
@@ -37,26 +44,34 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   }
 
   Future<void> _submit() async {
+    if (_isCreatingLocally) return;
     if (!_formKey.currentState!.validate()) return;
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
+
+    setState(() => _isCreatingLocally = true);
+    _contentFocus.unfocus();
 
     final success = await context.read<PostCubit>().createPost(
           userId: uid,
           content: _contentController.text,
         );
 
-    if (success && mounted) {
-      _contentController.clear();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Post published!'),
-          backgroundColor: AppColors.success,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          duration: const Duration(seconds: 2),
-        ),
-      );
+    if (mounted) {
+      setState(() => _isCreatingLocally = false);
+      if (success) {
+        _contentController.clear();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Post published!'),
+            backgroundColor: AppColors.success,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        widget.onPostCreated?.call();
+      }
     }
   }
 
@@ -84,7 +99,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           }
         },
         builder: (context, state) {
-          final isCreating = state is PostCreating;
+          final isCreating = _isCreatingLocally;
 
           return SafeArea(
             child: Padding(
@@ -105,7 +120,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Agartu',
+                            context.read<LocalStorageService>().username.isNotEmpty
+                                ? context.read<LocalStorageService>().username
+                                : (FirebaseAuth.instance.currentUser?.email?.split('@').first ?? 'User'),
                             style: const TextStyle(
                               fontWeight: FontWeight.w600,
                               fontSize: 14,
